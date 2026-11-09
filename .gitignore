@@ -1,0 +1,10 @@
+.env
+n8n-backup*.tgz
+
+# Local tooling and editor settings
+.claude/
+_bmad/
+.vscode/
+
+# BMad working notes
+.memlog.md

@@ -1,0 +1,23 @@
+services:
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:${N8N_VERSION:-2.46.6}
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${N8N_PORT:-5678}:5678"
+    environment:
+      - TZ=${TIMEZONE:-Europe/Paris}
+      - GENERIC_TIMEZONE=${TIMEZONE:-Europe/Paris}
+      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
+    volumes:
+      - n8n_data:/home/node/.n8n
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:5678/healthz || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  n8n_data:
+    # Fixed name: the volume survives renaming or moving this folder.
+    name: n8n_data
