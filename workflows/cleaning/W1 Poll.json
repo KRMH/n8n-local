@@ -1,0 +1,703 @@
+{
+  "name": "W1 Poll",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        592,
+        -304
+      ],
+      "id": "b3f586df-0064-4c4d-b9a5-d141b76124f2",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "FrDeNxVrQ8wp0hKV",
+          "mode": "list",
+          "cachedResultName": "state",
+          "cachedResultUrl": "/projects/nWyoj7gQpxxC0z6N/datatables/FrDeNxVrQ8wp0hKV"
+        },
+        "filters": {
+          "conditions": []
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        816,
+        -304
+      ],
+      "id": "dc3e1e37-bef6-4b12-8174-ab83b1391f53",
+      "name": "Get State"
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.all().map(i => i.json);\nconst cfg = {};\nfor (const r of rows) cfg[r.key] = r.value;\n\n// Another run is still working: stop quietly.\nconst until = cfg.poll_lock_until ? Date.parse(cfg.poll_lock_until) : 0;\nconst now = Date.now();\nif (until && until > now) return [];\n\nconst token = cfg.bot_token;\ndelete cfg.bot_token;\nreturn [{ json: {\n  token,\n  offset: Number(cfg.telegram_offset || 0),\n  lock_until: new Date(now + 55000).toISOString(),\n  cfg\n}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        -304
+      ],
+      "id": "fdf48fbb-cbc4-4989-ae29-198de07a8090",
+      "name": "Settings"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "value": "FrDeNxVrQ8wp0hKV",
+          "mode": "list",
+          "cachedResultName": "state",
+          "cachedResultUrl": "/projects/nWyoj7gQpxxC0z6N/datatables/FrDeNxVrQ8wp0hKV"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "key",
+              "keyValue": "poll_lock_until"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "value": "={{ $('Settings').item.json.lock_until }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "key",
+              "displayName": "key",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "value",
+              "displayName": "value",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1264,
+        -304
+      ],
+      "id": "7c1d009e-04a2-4768-bc60-52ec5dec2810",
+      "name": "Set Lock"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "9uj18bAhEKj5uxp1",
+          "mode": "list",
+          "cachedResultName": "people",
+          "cachedResultUrl": "/projects/nWyoj7gQpxxC0z6N/datatables/9uj18bAhEKj5uxp1"
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1712,
+        -304
+      ],
+      "id": "411de9d8-2aaa-4d16-bd65-cd039c0d6fd8",
+      "name": "Get people",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const updates = $('Get updates').first().json.result || [];\nconst people = $('Get people').all().map(i => i.json);\nconst out = [];\nfor (const u of updates) {\n  const m = u.message;\n  if (!m || !m.chat || m.chat.type !== 'private' || !m.from) continue;\n  const id = String(m.from.id);\n  const person = people.find(p => String(p.user_id) === id);\n  const text = m.text || m.caption || '';\n  const photo = m.photo ? m.photo[m.photo.length - 1].file_id : '';\n  out.push({ json: {\n    update_id: String(u.update_id),\n    user_id: id,\n    known: !!person,\n    name: person ? person.name : '',\n    role: person ? person.role : '',\n    text,\n    photo\n  }});\n}\nreturn out;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        752,
+        208
+      ],
+      "id": "1f56446e-3b55-46be-956d-e27ec0e51862",
+      "name": "Router"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.telegram.org/bot{{ $('Settings').item.json.token }}/getUpdates",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "timeout",
+              "value": "0"
+            },
+            {
+              "name": "limit",
+              "value": "100"
+            },
+            {
+              "name": "offset",
+              "value": "={{ $('Settings').item.json.offset }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1488,
+        -304
+      ],
+      "id": "e75e8ddf-c74b-4d4a-9f8d-5c21dea9d4f3",
+      "name": "Get updates"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "xLHo3SNEMstXEjGo",
+          "mode": "list",
+          "cachedResultName": "log",
+          "cachedResultUrl": "/projects/nWyoj7gQpxxC0z6N/datatables/xLHo3SNEMstXEjGo"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ts": "={{ $now.toISO() }}",
+            "update_id": "={{ $json.update_id }}",
+            "direction": "in",
+            "user_id": "={{ $json.user_id }}",
+            "text": "={{ $json.photo ? '[photo ' + $json.photo + '] ' + $json.text : $json.text }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "ts",
+              "displayName": "ts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "update_id",
+              "displayName": "update_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "direction",
+              "displayName": "direction",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "text",
+              "displayName": "text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "ref",
+              "displayName": "ref",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1152,
+        0
+      ],
+      "id": "9ffabcd8-f9cf-4d3e-8204-c54dc5fbce9f",
+      "name": "Log in"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "A1tL7i0tPA4BZpnr",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/A1tL7i0tPA4BZpnr",
+          "cachedResultName": "S1 Send"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "to": "={{ $('Known?').item.json.user_id }}",
+            "key": "ok",
+            "params": "={{ {} }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "to",
+              "displayName": "to",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "key",
+              "displayName": "key",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "params",
+              "displayName": "params",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "object",
+              "removed": false
+            },
+            {
+              "id": "ref",
+              "displayName": "ref",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.4,
+      "position": [
+        1344,
+        0
+      ],
+      "id": "1e8aa2e3-ce0d-4015-bc21-e6cc186b24f1",
+      "name": "reply"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "ab741f09-b93b-4ef8-8c89-f730f53938eb",
+              "leftValue": "= {{ $json.known}}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        976,
+        208
+      ],
+      "id": "2a1754bf-7e48-4db9-9c9a-c518865fbfa4",
+      "name": "Known?"
+    },
+    {
+      "parameters": {
+        "jsCode": "const res = $('Get updates').first().json.result || [];\nconst ids = res.map(u => u.update_id).filter(Number.isFinite);\nif (!ids.length) return [];\nreturn [{ json: { next_offset: String(Math.max(...ids) + 1) } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1536,
+        224
+      ],
+      "id": "e66d6886-0030-43e0-b4ea-68aae2298a43",
+      "name": "Next Offset"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "value": "FrDeNxVrQ8wp0hKV",
+          "mode": "list",
+          "cachedResultName": "state",
+          "cachedResultUrl": "/projects/nWyoj7gQpxxC0z6N/datatables/FrDeNxVrQ8wp0hKV"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "key",
+              "keyValue": "poll_lock_until"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "value": "2000-01-01T00:00:00Z"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "key",
+              "displayName": "key",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "value",
+              "displayName": "value",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1824,
+        224
+      ],
+      "id": "42c0e64f-b451-4080-9c18-16d322e55bd5",
+      "name": "Release Lock"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "value": "FrDeNxVrQ8wp0hKV",
+          "mode": "list",
+          "cachedResultName": "state",
+          "cachedResultUrl": "/projects/nWyoj7gQpxxC0z6N/datatables/FrDeNxVrQ8wp0hKV"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "key",
+              "keyValue": "telegram_offset"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "value": "={{ $json.next_offset }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "key",
+              "displayName": "key",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "value",
+              "displayName": "value",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1680,
+        224
+      ],
+      "id": "f2b801dd-7509-4135-8cfe-dc6c53aa1d04",
+      "name": "Save offset",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 1
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        496,
+        -112
+      ],
+      "id": "2875a25d-e65a-43e4-b553-1c39f4ee95d7",
+      "name": "Schedule Trigger"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get State": {
+      "main": [
+        [
+          {
+            "node": "Settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Settings": {
+      "main": [
+        [
+          {
+            "node": "Set Lock",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Lock": {
+      "main": [
+        [
+          {
+            "node": "Get updates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get people": {
+      "main": [
+        [
+          {
+            "node": "Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get updates": {
+      "main": [
+        [
+          {
+            "node": "Get people",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Router": {
+      "main": [
+        [
+          {
+            "node": "Known?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log in": {
+      "main": [
+        [
+          {
+            "node": "reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Known?": {
+      "main": [
+        [
+          {
+            "node": "Log in",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Next Offset",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "reply": {
+      "main": [
+        [
+          {
+            "node": "Next Offset",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Next Offset": {
+      "main": [
+        [
+          {
+            "node": "Save offset",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save offset": {
+      "main": [
+        [
+          {
+            "node": "Release Lock",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "saveDataSuccessExecution": "none",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "8e687835-10c6-4e19-9354-6c15624ffce8",
+  "meta": {
+    "instanceId": "c11ebcdb487ce4b5af3f680ae5db50209056ada1babf067ff7372e271e4eb196"
+  },
+  "nodeGroups": [],
+  "id": "uejl42Zie0p6ULgI",
+  "tags": []
+}

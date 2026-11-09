@@ -1,0 +1,216 @@
+{
+  "name": "S1 Send",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "jsonExample",
+        "jsonExample": "{\"to\":\"123456789\",\"key\":\"welcome_owner\",\"params\":{\"name\":\"Kristel\"},\"ref\":\"\"}"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "42aca422-9e9d-41bc-bf71-9945d139bdae",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "jsCode": "// S1 Send - \"Render\" node (Code, JavaScript, Run Once for All Items)\n// English only. To change a wording, edit the text in MESSAGES.\nconst MESSAGES = {\n  \"welcome\": \"Welcome {name}. Send me what you see in a chalet, for example: chalet 12 heater broken. Start with ! for urgent. Send help for all commands.\",\n  \"welcome_owner\": \"Welcome {name}. Employees' reports arrive here. Send help for all commands.\",\n  \"not_allowed\": \"You are not allowed to do that.\",\n  \"unsupported\": \"I can only read text and photos.\",\n  \"bad_chalet\": \"Chalet number must be between 1 and {max}.\",\n  \"report_received\": \"Received #{no}.\",\n  \"report_forward\": \"#{no} from {name}, chalet {chalet}:\\n{text}\",\n  \"report_forward_urgent\": \"URGENT #{no} from {name}, chalet {chalet}:\\n{text}\",\n  \"owner_help\": \"Commands: @name text | @12 text | @all text | close #17 | open | left 12 | assign T5 name | start T5 | leave T5 | finish T5\",\n  \"employee_help\": \"Send a message to report a problem (start with ! for urgent). Commands: left 12 | start T5 | leave T5 | finish T5 | assign T5 name | tasks | help\",\n  \"unknown_person\": \"I do not know anyone called {name}.\",\n  \"ambiguous_person\": \"More than one match for {name}: {names}. Use the full name.\",\n  \"nobody_at_chalet\": \"Nobody is working at chalet {chalet}. Send it with @all or @name instead.\",\n  \"from_owner\": \"Message from the owner:\\n{text}\",\n  \"delivered\": \"Delivered to {count}: {names}.\",\n  \"unreachable_note\": \"Not reached (they have not started the bot): {names}.\",\n  \"no_such_report\": \"There is no report #{no}.\",\n  \"already_closed\": \"Report #{no} is already closed.\",\n  \"report_closed\": \"Report #{no} is closed.\",\n  \"ok\": \"Done.\",\n  \"task_new\": \"Guests left chalet {chalet}. Cleaning task T{no} is pending. Send start T{no} to take it.\",\n  \"task_new_others\": \"Other open tasks at chalet {chalet}: {list}.\",\n  \"task_assigned\": \"You were given cleaning task T{no} (chalet {chalet}) by {name}.\",\n  \"task_started\": \"{name} started T{no} (chalet {chalet}).\",\n  \"task_left\": \"{name} left T{no} (chalet {chalet}).\",\n  \"task_done\": \"T{no} (chalet {chalet}) is done, finished by {name}.\",\n  \"which_task\": \"Chalet {chalet} has several open tasks: {list}. Repeat with the task number, for example start T5.\",\n  \"no_open_task\": \"There is no open task at chalet {chalet}.\",\n  \"no_such_task\": \"There is no task T{no}.\",\n  \"task_closed\": \"Task T{no} is already done.\",\n  \"not_on_task\": \"You are not on T{no}. Send start T{no} first.\",\n  \"person_unreachable\": \"{name} has not started the bot, so the message was not delivered.\",\n  \"urgent_reminder\": \"Still open: {list}\",\n  \"task_pending_reminder\": \"Still pending: {list}\",\n  \"digest\": \"Good morning. Urgent open reports: {urgent}. Other open reports: {other}. Tasks: {tasks}.\",\n  \"digest_empty\": \"Good morning. Nothing is open.\",\n  \"did_you_mean\": \"Did you mean {command}? Send it again, or add a few words if it was a report.\"\n};\n\nconst t = $('When Executed by Another Workflow').first().json;\nlet text = MESSAGES[t.key] ?? `[missing message: ${t.key}]`;\nconst params = t.params || {};\n// Parse mode is HTML, so user-supplied values must not contain raw < > &.\nconst esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');\ntext = text.replace(/\\{(\\w+)\\}/g, (m, k) => (params[k] !== undefined ? esc(params[k]) : m));\n\n// Telegram allows 4096 characters per message; split long text at line breaks.\nconst chunks = [];\nwhile (text.length > 4000) {\n  let cut = text.lastIndexOf('\\n', 4000);\n  if (cut < 1) cut = 4000;\n  chunks.push(text.slice(0, cut));\n  text = text.slice(cut).replace(/^\\n/, '');\n}\nchunks.push(text);\n\nreturn chunks.map(c => ({ json: { to: String(t.to), text: c, ref: t.ref || '' } }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        0
+      ],
+      "id": "6c812b58-0e5c-46b8-9ddc-28b60bfbf42d",
+      "name": "Render"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.to}}",
+        "text": "={{ $json.text }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        448,
+        0
+      ],
+      "id": "0f8a6c4f-9ccd-4628-94cc-9134e514631e",
+      "name": "Send",
+      "webhookId": "1fd7eccf-d714-482a-8022-d2d4d593a28a",
+      "retryOnFail": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "PAitVQ9m4BGw7ujR",
+          "name": "Telegram account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "xLHo3SNEMstXEjGo",
+          "mode": "list",
+          "cachedResultName": "log",
+          "cachedResultUrl": "/projects/nWyoj7gQpxxC0z6N/datatables/xLHo3SNEMstXEjGo"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ts": "={{ $now.toISO() }}",
+            "direction": "out",
+            "user_id": "={{ $('Render').item.json.to }}",
+            "text": "={{ $('Render').item.json.text }}",
+            "ref": "={{ $('Render').item.json.ref }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "ts",
+              "displayName": "ts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "update_id",
+              "displayName": "update_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "direction",
+              "displayName": "direction",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "text",
+              "displayName": "text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "ref",
+              "displayName": "ref",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        672,
+        -96
+      ],
+      "id": "1d9a989e-0bee-44b0-8c94-4170be10a946",
+      "name": "Log out"
+    }
+  ],
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "to": "123456789",
+          "key": "welcome_owner",
+          "params": {
+            "name": "Kristel"
+          },
+          "ref": ""
+        }
+      }
+    ]
+  },
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Render",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Render": {
+      "main": [
+        [
+          {
+            "node": "Send",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send": {
+      "main": [
+        [
+          {
+            "node": "Log out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "53dc5bf8-8ab4-4d60-9646-d05ab68621f4",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c11ebcdb487ce4b5af3f680ae5db50209056ada1babf067ff7372e271e4eb196"
+  },
+  "nodeGroups": [],
+  "id": "A1tL7i0tPA4BZpnr",
+  "tags": []
+}
