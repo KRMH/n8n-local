@@ -1,0 +1,568 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Forty Chalets at 08:00 - n8n for Le Register</title>
+<style>
+:root{
+  --bg:#f3f5fa; --bg2:#e6ebf5; --card:#ffffff; --ink:#1c2442; --mute:#5d6685; --line:#cfd6e6;
+  --roof:#b8452f; --pine:#2d6354; --dusk:#5a4a8c; --gold:#e9a92b; --ice:#2f7fae; --sky1:#f7c7a0; --sky2:#9fb4dd;
+  --mtn1:#7d8bb3; --mtn2:#4d5b86; --snow:#ffffff; --shadow:0 2px 10px rgba(28,36,66,.10);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1628; --bg2:#172039; --card:#1a2442; --ink:#e8ecf8; --mute:#9aa6c8; --line:#2c3862;
+    --roof:#e07a5f; --pine:#6fbf9f; --dusk:#b5a4f0; --gold:#f4c25b; --ice:#7cc3ee; --sky1:#4a3a6b; --sky2:#141c3a;
+    --mtn1:#2a3560; --mtn2:#1a2347; --snow:#dfe6fa; --shadow:0 2px 12px rgba(0,0,0,.4);
+  }
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+#snow{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:50;opacity:.7}
+.wrap{max-width:1040px;margin:0 auto;padding:0 16px}
+header.hero{background:linear-gradient(180deg,var(--sky2),var(--sky1));position:relative;overflow:hidden;padding:40px 0 0}
+.hero h1{font-size:clamp(1.9rem,6vw,3.4rem);line-height:1.08;margin:6px 0 10px;color:#fff;text-shadow:0 2px 12px rgba(0,0,30,.35);letter-spacing:-.5px}
+.hero .kick{color:#fff;opacity:.9;letter-spacing:.18em;text-transform:uppercase;font-size:.78rem}
+.hero .goal{color:#fff;max-width:46em;font-size:1.05rem;text-shadow:0 1px 6px rgba(0,0,30,.4)}
+.meta{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0 0;padding-bottom:0}
+.pill{background:rgba(255,255,255,.85);color:#1c2442;border-radius:99px;padding:6px 14px;font-size:.85rem;font-weight:600}
+.pill b{font-size:1.15rem;color:var(--roof)}
+.hero svg{display:block;width:100%;height:auto;margin-top:-10px}
+nav.toc{position:sticky;top:0;z-index:40;background:var(--bg);border-bottom:1px solid var(--line);overflow-x:auto;white-space:nowrap}
+nav.toc a{display:inline-block;padding:10px 12px;color:var(--mute);text-decoration:none;font-size:.82rem}
+nav.toc a:hover{color:var(--roof)}
+section{padding:46px 0 14px}
+section h2{font-size:clamp(1.4rem,4vw,2rem);margin:0 0 4px;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+section h2 .n{font-size:.8rem;color:var(--mute);font-weight:500;letter-spacing:.14em;text-transform:uppercase}
+.lede{color:var(--mute);margin:0 0 20px;max-width:48em}
+.num{display:inline-block;font-size:.68rem;font-weight:700;color:var(--mute);border:1px solid var(--line);border-radius:6px;padding:0 5px;margin-right:6px;vertical-align:1px}
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow);position:relative}
+.card h3{margin:0 0 6px;font-size:1rem}
+.card p{margin:0}
+/* role cards: chalets */
+.role{padding-top:30px;margin-top:20px;border-top:5px solid var(--roof);border-radius:4px 4px 12px 12px}
+.role::before{content:"";position:absolute;left:-1px;right:-1px;top:-26px;height:22px;background:var(--roof);clip-path:polygon(0 100%,50% 0,100% 100%)}
+.role .win{position:absolute;right:14px;top:10px;width:14px;height:14px;background:var(--gold);border-radius:2px;box-shadow:0 0 10px var(--gold)}
+.role h3{color:var(--roof)}
+.rolegrid{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));padding-top:14px}
+.rolegrid .group{grid-column:1/-1}
+/* constraint map */
+.cmap{display:grid;gap:14px;grid-template-columns:1fr}
+@media(min-width:760px){.cmap{grid-template-columns:1fr 1fr 1fr}}
+.zone{border-radius:14px;padding:14px;border:1px solid var(--line)}
+.zone h3{margin:0 0 4px;font-size:1.05rem}
+.zone small{color:var(--mute);display:block;margin-bottom:10px}
+.zone.real{background:linear-gradient(180deg,var(--bg2),var(--card));border-top:6px solid var(--mtn2)}
+.zone.imag{background:repeating-linear-gradient(135deg,var(--card) 0 10px,var(--bg2) 10px 20px);border-top:6px dashed var(--ice)}
+.zone.trail{background:linear-gradient(180deg,var(--card),var(--bg2));border-top:6px solid var(--pine)}
+.stone{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:9px 12px;margin-bottom:9px;font-size:.93rem}
+.real .stone{border-left:5px solid var(--mtn2)}
+.imag .stone{border-style:dashed;border-left:5px dashed var(--ice)}
+.trail .stone{border-left:5px solid var(--pine)}
+.trail .stone i{display:block;font-style:normal;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--pine);font-weight:700}
+.rules{background:var(--bg2);border-radius:12px;padding:12px 16px;margin-bottom:18px;font-size:.92rem;border-left:5px solid var(--gold)}
+.rules b{display:block;font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
+/* postcards */
+.post{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:14px 16px 14px;box-shadow:var(--shadow);position:relative;transform:rotate(var(--r,0deg))}
+.post::after{content:"";position:absolute;top:10px;right:10px;width:34px;height:40px;border:2px dashed var(--line);border-radius:3px;background:linear-gradient(var(--bg2),var(--bg2))}
+.post .from{font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--dusk);font-weight:700;padding-right:44px}
+.post h3{margin:2px 40px 6px 0;font-size:1.15rem;color:var(--dusk)}
+/* reverse */
+.flip{display:grid;grid-template-columns:1fr;border-radius:12px;overflow:hidden;border:1px solid var(--line);box-shadow:var(--shadow);background:var(--card)}
+.flip .bad{background:#3a2330;color:#ffd9d0;padding:12px 16px}
+.flip .good{background:var(--card);padding:12px 16px;border-top:4px solid var(--pine)}
+.flip .bad b,.flip .good b{display:block;font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;opacity:.85}
+.flip .good b{color:var(--pine)}
+.flip h3{margin:0;padding:10px 16px;font-size:.95rem;background:var(--bg2)}
+/* failure */
+.pairs{display:grid;gap:12px}
+.pair{display:grid;grid-template-columns:1fr;gap:0;align-items:stretch}
+@media(min-width:700px){.pair{grid-template-columns:1fr 46px 1fr}}
+.pair .f,.pair .x{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:11px 14px;box-shadow:var(--shadow)}
+.pair .f{border-left:6px solid var(--roof)}
+.pair .x{border-left:6px solid var(--pine)}
+.pair .arr{display:flex;align-items:center;justify-content:center;color:var(--mute);font-size:1.5rem}
+.pair .arr::before{content:"\2193"}
+@media(min-width:700px){.pair .arr::before{content:"\2192"}}
+.tag{display:inline-block;font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700;padding:1px 8px;border-radius:99px;background:var(--bg2);color:var(--mute);margin-bottom:4px}
+.tag.gap{color:var(--roof)} .tag.pat{color:var(--dusk)} .tag.les{color:var(--gold);background:#3a3320}
+.lesson{background:linear-gradient(90deg,#3a3320,var(--card));border:1px solid var(--gold);border-radius:12px;padding:12px 16px}
+/* morph grid */
+.mscroll{overflow-x:auto;border-radius:12px;border:1px solid var(--line);box-shadow:var(--shadow);background:var(--card)}
+table.morph{border-collapse:collapse;min-width:860px;width:100%;font-size:.84rem}
+.morph th{background:var(--bg2);padding:8px;text-align:left;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
+.morph th.rowh{white-space:nowrap;color:var(--dusk)}
+.morph td{border-top:1px solid var(--line);border-left:1px solid var(--line);padding:6px;vertical-align:top;min-width:140px;height:70px}
+.morph .c{background:color-mix(in srgb,var(--gold) 22%,var(--card));border-radius:8px;padding:6px 8px;margin-bottom:5px;border-left:4px solid var(--gold)}
+.hint{font-size:.78rem;color:var(--mute);margin-top:6px}
+.axis{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px}
+.axis span{border:1px solid var(--line);border-radius:99px;padding:2px 10px;font-size:.8rem;background:var(--card)}
+.axis b{font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);align-self:center;margin-right:4px}
+/* build */
+.rings{display:grid;gap:12px}
+.ring{display:grid;grid-template-columns:1fr;gap:6px}
+@media(min-width:700px){.ring{grid-template-columns:1fr 1fr}}
+.ring .w{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:11px 14px;border-left:6px solid var(--pine)}
+.ring .e{background:color-mix(in srgb,var(--pine) 16%,var(--card));border:1px solid var(--line);border-radius:10px;padding:11px 14px;border-left:6px solid var(--gold)}
+.ring b{display:block;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
+.spark{border:2px dashed var(--gold);background:var(--card);border-radius:12px;padding:12px 16px;position:relative}
+.spark::before{content:"\2726";position:absolute;right:12px;top:8px;color:var(--gold);font-size:1.2rem}
+/* what if */
+.if{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.if::before{content:"?";position:absolute;right:-6px;top:-22px;font-size:5.5rem;font-weight:800;color:var(--dusk);opacity:.12}
+.if h3{margin:0 0 6px;font-size:.98rem;color:var(--dusk)}
+/* timeline */
+.tl{position:relative;margin:0 0 0 14px;padding-left:26px;border-left:4px solid var(--line)}
+.era{margin:0 0 6px -42px;display:inline-block;background:var(--dusk);color:#fff;border-radius:99px;padding:3px 14px;font-weight:700;font-size:.85rem}
+.era.now{background:var(--pine)} .era.fut{background:var(--ice)}
+.tl .ev{position:relative;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin:0 0 10px;box-shadow:var(--shadow)}
+.tl .ev::before{content:"";position:absolute;left:-36px;top:16px;width:14px;height:14px;border-radius:50%;background:var(--card);border:4px solid var(--dusk)}
+.tl.now .ev::before{border-color:var(--pine)} .tl.fut .ev::before{border-color:var(--ice)}
+.tl .ev h3{margin:0 0 3px;font-size:.78rem;letter-spacing:.1em;text-transform:uppercase;color:var(--mute)}
+.tl.past .ev{font-family:Georgia,"Times New Roman",serif;background:#f1e8d3;color:#3a2e1a;border-color:#cdb98d}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .tl.past .ev{background:#2e2a22;color:#e8dcc0;border-color:#5a4e36}}
+.tl.fut .ev{border-color:var(--ice);box-shadow:0 0 14px color-mix(in srgb,var(--ice) 35%,transparent)}
+.tl.now .evs{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
+.tl.now .ev{margin:0}
+/* synthesis */
+.climax{margin-top:40px;background:linear-gradient(180deg,var(--sky2),var(--bg2));border-radius:20px;padding:28px 16px 20px;position:relative;overflow:hidden}
+@media(min-width:700px){.climax{padding:34px 28px 26px}}
+.climax h2{margin-top:0}
+.insights{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));margin:18px 0}
+.ins{background:var(--card);border-radius:12px;padding:14px 16px;border:1px solid var(--line);box-shadow:var(--shadow)}
+.ins .k{font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--dusk);font-weight:700}
+.diagram{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px;margin:16px 0}
+.diagram svg{width:100%;height:auto;display:block}
+.diagram text{fill:var(--ink);font-family:system-ui,sans-serif}
+.diagram .box{fill:var(--card);stroke:var(--ink);stroke-width:2}
+.diagram .tx{fill:var(--mute);font-size:12px}
+.diagram .ln{stroke:var(--mute);stroke-width:2.5;fill:none}
+.diagram .dash{stroke-dasharray:6 5}
+.dir{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));margin:14px 0}
+.dir .d{background:var(--card);border-radius:14px;border:1px solid var(--line);padding:14px 16px;border-top:6px solid var(--roof);box-shadow:var(--shadow)}
+.dir .d .big{font-size:2.2rem;font-weight:800;color:var(--roof);line-height:1}
+.dir .d:nth-child(2){border-top-color:var(--ice)} .dir .d:nth-child(2) .big{color:var(--ice)}
+.dir .d:nth-child(3){border-top-color:var(--pine)} .dir .d:nth-child(3) .big{color:var(--pine)}
+.enabler{background:var(--ink);color:var(--bg);border-radius:14px;padding:16px 18px;margin-top:12px;border:3px solid var(--gold)}
+.enabler b{color:var(--gold)}
+.dir .d ul{margin:6px 0 0;padding-left:18px;font-size:.88rem;color:var(--mute)}
+footer{padding:40px 16px 60px;text-align:center;color:var(--mute);font-size:.85rem}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<canvas id="snow" aria-hidden="true"></canvas>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="kick">Brainstorm keepsake &middot; 9 November 2026</div>
+    <h1>Forty chalets, one bot,<br>and a hub that wakes at 08:00</h1>
+    <p class="goal"><b>Topic:</b> n8n features that complement Le Register<br>
+    <b>Goal:</b> Find what to build in local n8n around the Le Register Telegram booking bot: less owner workload, no undetected overlaps, near-zero cost.</p>
+    <div class="meta">
+      <span class="pill"><b id="cnt">102</b> ideas</span>
+      <span class="pill"><b>9</b> techniques</span>
+      <span class="pill"><b>40</b> chalets</span>
+      <span class="pill"><b>3</b> chosen directions</span>
+    </div>
+  </div>
+  <svg viewBox="0 0 1000 200" preserveAspectRatio="none" aria-hidden="true">
+    <polygon points="0,200 0,120 90,60 170,110 260,40 360,120 450,70 560,130 650,50 760,125 860,80 1000,130 1000,200" fill="var(--mtn1)"/>
+    <polygon points="260,40 235,62 252,58 262,70 274,58 290,64" fill="var(--snow)" opacity=".9"/>
+    <polygon points="650,50 628,72 645,68 655,80 668,68 682,74" fill="var(--snow)" opacity=".9"/>
+    <polygon points="0,200 0,150 120,110 220,150 340,100 460,155 580,115 700,160 820,120 1000,165 1000,200" fill="var(--mtn2)"/>
+    <g id="village"></g>
+    <rect x="0" y="185" width="1000" height="15" fill="var(--snow)"/>
+  </svg>
+</header>
+
+<nav class="toc" aria-label="Sections"><div class="wrap">
+  <a href="#roles">Role Playing</a><a href="#constraints">Constraints</a><a href="#cross">Cross-Pollination</a><a href="#reverse">Reverse</a><a href="#failure">Failure</a><a href="#morph">Morphological</a><a href="#build">Build on Works</a><a href="#whatif">What If</a><a href="#time">Time Shifting</a><a href="#synthesis">Synthesis</a>
+</div></nav>
+
+<main class="wrap">
+
+<section id="roles">
+  <h2><span class="n">Technique 1</span>Role Playing: who lives in the village?</h2>
+  <p class="lede">Every stakeholder gets a chalet, and every chalet gets a light in the window. What would each of them want from a quiet automation hub?</p>
+  <div class="rolegrid" id="roleGrid"></div>
+</section>
+
+<section id="constraints">
+  <h2><span class="n">Technique 2</span>Constraint Mapping: rock, mist, and trail</h2>
+  <p class="lede">Granite you cannot move, mist that only looks like a wall, and the trails that go around or through it.</p>
+  <div class="rules"><b>Ground rules recorded at the start</b>
+    Le Register = Telegram bot, long polling, SQLite outside the repo, owner-only, append-only journal, outbox, 40 chalets; planned: overlaps, ratings, 08:00 summary, Trello. n8n runs on 127.0.0.1 only.<br><br>
+    Only one consumer may poll a bot token (getUpdates), so n8n must not read the Le Register bot's incoming messages; sending via the Bot API is fine, or use a second bot.<br><br>
+    Execute Command is off by default in n8n 2.x and n8n only sees files mounted into its volume, so reading the SQLite file needs a deliberate mount or an export.</div>
+  <div class="cmap" id="cmap"></div>
+</section>
+
+<section id="cross">
+  <h2><span class="n">Technique 3</span>Cross-Pollination: postcards from other industries</h2>
+  <p class="lede">Ten postcards, each stamped by an industry that already solved a cousin of this problem.</p>
+  <div class="grid" id="postGrid"></div>
+</section>
+
+<section id="reverse">
+  <h2><span class="n">Technique 4</span>Reverse Brainstorming: how to wreck it, then the guard</h2>
+  <p class="lede">Flip each card: the dark side is how we would ruin the thing; the light side is what n8n does about it.</p>
+  <div class="grid" id="revGrid"></div>
+</section>
+
+<section id="failure">
+  <h2><span class="n">Technique 5</span>Failure Analysis: crack, then patch</h2>
+  <p class="lede">Deferred gaps and failure patterns, each paired with the n8n move that catches it.</p>
+  <div class="pairs" id="failGrid"></div>
+</section>
+
+<section id="morph">
+  <h2><span class="n">Technique 6</span>Morphological Analysis: trigger x action</h2>
+  <p class="lede">Two axes, one grid. Gold cells are the combinations that were worth keeping.</p>
+  <div class="axis"><b>Triggers</b><span>schedule</span><span>Telegram message</span><span>HTTP webhook</span><span>file change</span><span>form submit</span></div>
+  <div class="axis"><b>Actions</b><span>message</span><span>sheet row</span><span>calendar event</span><span>email</span><span>Trello card</span></div>
+  <div class="mscroll"><table class="morph" id="morphTbl"></table></div>
+  <div class="hint">Scroll sideways on a phone. The last row and column hold combos that reach beyond the five-by-five axes.</div>
+</section>
+
+<section id="build">
+  <h2><span class="n">Technique 7</span>Build on What Works: growth rings</h2>
+  <p class="lede">What already works in Le Register, and the ring n8n can add around it. Then the wildcards.</p>
+  <div class="rings" id="ringGrid"></div>
+  <h3 style="margin:24px 0 10px">Wildcards</h3>
+  <div class="grid" id="wildGrid"></div>
+</section>
+
+<section id="whatif">
+  <h2><span class="n">Technique 8</span>What If Scenarios: bend the world</h2>
+  <p class="lede">Twelve small impossibilities, each with what n8n would do in that world.</p>
+  <div class="grid" id="ifGrid"></div>
+</section>
+
+<section id="time">
+  <h2><span class="n">Technique 9</span>Time Shifting: from 1900 to 2150</h2>
+  <p class="lede">The idea trail runs from a paper ledger on the wall, through the practical work of today, to a colony in 2150.</p>
+  <div id="timeline"></div>
+</section>
+
+<section id="synthesis">
+  <div class="climax">
+    <h2><span class="n">Synthesis</span>Where the snow settles</h2>
+    <p class="lede" style="color:var(--ink)">One hundred and two ideas collapse into four insights, three chosen directions, and a single key that opens all of them.</p>
+    <div class="insights" id="insights"></div>
+
+    <h3>How it connects</h3>
+    <div class="diagram">
+      <svg viewBox="0 0 900 470" role="img" aria-label="Diagram: Le Register exports bookings to a folder or read-only endpoint; n8n on 127.0.0.1 reads the export and iCal feeds and produces the safety net, unified overlap check and daily ops board, sent via a second bot or email.">
+        <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--mute)"/></marker></defs>
+        <!-- Le Register -->
+        <rect class="box" x="20" y="150" width="190" height="140" rx="14"/>
+        <text x="115" y="178" text-anchor="middle" font-size="17" font-weight="700">Le Register</text>
+        <text class="tx" x="115" y="200" text-anchor="middle">Telegram bot, owner-only</text>
+        <text class="tx" x="115" y="220" text-anchor="middle">SQLite + append-only journal</text>
+        <text class="tx" x="115" y="240" text-anchor="middle">outbox, 40 chalets</text>
+        <text class="tx" x="115" y="266" text-anchor="middle">never opens a port</text>
+        <!-- export -->
+        <rect x="270" y="170" width="150" height="100" rx="12" fill="color-mix(in srgb,var(--gold) 30%,var(--card))" stroke="var(--gold)" stroke-width="3"/>
+        <text x="345" y="200" text-anchor="middle" font-size="15" font-weight="700">Booking export</text>
+        <text class="tx" x="345" y="220" text-anchor="middle">CSV or JSON in a</text>
+        <text class="tx" x="345" y="237" text-anchor="middle">mounted folder, or a</text>
+        <text class="tx" x="345" y="254" text-anchor="middle">read-only endpoint</text>
+        <path class="ln" d="M210,220 L268,220" marker-end="url(#ah)"/>
+        <!-- n8n -->
+        <rect class="box" x="480" y="110" width="170" height="220" rx="14"/>
+        <text x="565" y="140" text-anchor="middle" font-size="17" font-weight="700">n8n</text>
+        <text class="tx" x="565" y="160" text-anchor="middle">127.0.0.1 only</text>
+        <text class="tx" x="565" y="180" text-anchor="middle">free, self-hosted</text>
+        <text class="tx" x="565" y="214" text-anchor="middle">pulls from Le Register</text>
+        <text class="tx" x="565" y="234" text-anchor="middle">execution log =</text>
+        <text class="tx" x="565" y="251" text-anchor="middle">free audit trail</text>
+        <text class="tx" x="565" y="285" text-anchor="middle">always-on mini PC</text>
+        <text class="tx" x="565" y="302" text-anchor="middle">or Raspberry Pi</text>
+        <path class="ln" d="M420,220 L478,220" marker-end="url(#ah)"/>
+        <!-- ical -->
+        <rect class="box dash" x="480" y="10" width="170" height="64" rx="12" style="stroke-dasharray:6 5"/>
+        <text x="565" y="36" text-anchor="middle" font-size="14" font-weight="700">iCal feeds</text>
+        <text class="tx" x="565" y="56" text-anchor="middle">Booking.com, Airbnb, website</text>
+        <path class="ln dash" d="M565,74 L565,108" marker-end="url(#ah)"/>
+        <!-- outputs -->
+        <rect x="720" y="20" width="170" height="104" rx="12" fill="color-mix(in srgb,var(--roof) 18%,var(--card))" stroke="var(--roof)" stroke-width="3"/>
+        <text x="805" y="46" text-anchor="middle" font-size="15" font-weight="700">A  Safety net</text>
+        <text class="tx" x="805" y="68" text-anchor="middle">nightly SQLite backup</text>
+        <text class="tx" x="805" y="85" text-anchor="middle">dead-man's switch 08:15</text>
+        <text class="tx" x="805" y="102" text-anchor="middle">weekly canary command</text>
+        <rect x="720" y="168" width="170" height="104" rx="12" fill="color-mix(in srgb,var(--ice) 18%,var(--card))" stroke="var(--ice)" stroke-width="3"/>
+        <text x="805" y="194" text-anchor="middle" font-size="15" font-weight="700">B  Unified overlap</text>
+        <text class="tx" x="805" y="216" text-anchor="middle">phone + Booking.com +</text>
+        <text class="tx" x="805" y="233" text-anchor="middle">Airbnb + website,</text>
+        <text class="tx" x="805" y="250" text-anchor="middle">one overlap check</text>
+        <rect x="720" y="316" width="170" height="104" rx="12" fill="color-mix(in srgb,var(--pine) 18%,var(--card))" stroke="var(--pine)" stroke-width="3"/>
+        <text x="805" y="342" text-anchor="middle" font-size="15" font-weight="700">C  Daily ops board</text>
+        <text class="tx" x="805" y="364" text-anchor="middle">arrivals, departures,</text>
+        <text class="tx" x="805" y="381" text-anchor="middle">cleanings, open alerts</text>
+        <text class="tx" x="805" y="398" text-anchor="middle">in one morning message</text>
+        <path class="ln" d="M650,150 L718,80" marker-end="url(#ah)"/>
+        <path class="ln" d="M650,220 L718,220" marker-end="url(#ah)"/>
+        <path class="ln" d="M650,290 L718,360" marker-end="url(#ah)"/>
+        <!-- delivery -->
+        <rect class="box" x="480" y="380" width="170" height="70" rx="12"/>
+        <text x="565" y="406" text-anchor="middle" font-size="14" font-weight="700">Second Telegram bot</text>
+        <text class="tx" x="565" y="426" text-anchor="middle">staff and owner alerts;</text>
+        <text class="tx" x="565" y="442" text-anchor="middle">sends only, never polls</text>
+        <path class="ln" d="M565,330 L565,378" marker-end="url(#ah)"/>
+        <path class="ln dash" d="M480,415 L115,415 L115,292" marker-end="url(#ah)" style="stroke-dasharray:6 5"/>
+        <text class="tx" x="300" y="408" text-anchor="middle">alerts about the bot go out via a separate bot</text>
+      </svg>
+    </div>
+
+    <h3>Chosen directions</h3>
+    <div class="dir">
+      <div class="d"><div class="big">A</div><h3>Safety-net bundle</h3>
+        <ul><li>nightly backup of the SQLite file</li><li>dead-man's switch for the 08:00 summary</li><li>weekly canary command</li></ul></div>
+      <div class="d"><div class="big">B</div><h3>Unified overlap via iCal</h3>
+        <ul><li>read Booking.com, Airbnb and website iCal feeds</li><li>one overlap check across all sources</li></ul></div>
+      <div class="d"><div class="big">C</div><h3>Daily ops board</h3>
+        <ul><li>arrivals and departures</li><li>cleaning turnovers</li></ul></div>
+    </div>
+    <div class="enabler"><b>The enabler for all three:</b> a booking export from Le Register. One read-only file or small endpoint, and the village lights come on.</div>
+  </div>
+</section>
+
+</main>
+<footer>Forty chalets, one bot, zero cost. Generated from the session memlog of 2026-11-09, status: complete.</footer>
+
+<script>
+(function(){
+var E=function(t,c,h){var e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e};
+var esc=function(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")};
+var N=0;
+var nm=function(){N++;return '<span class="num">#'+(N<10?"0"+N:N)+'</span>'};
+var $=function(id){return document.getElementById(id)};
+var split=function(s,sep){var i=s.indexOf(sep);return i<0?[s,""]:[s.slice(0,i),s.slice(i+sep.length)]};
+var cap=function(s){return s.charAt(0).toUpperCase()+s.slice(1)};
+
+/* 1 Role Playing */
+var roles=[
+"Owner: a Sunday evening message listing next week's arrivals and departures per chalet, built by n8n from the booking export",
+"Owner: a \"who is arriving today\" ping at 07:30 with phone numbers, tap-to-call links",
+"Owner: a monthly occupancy report per chalet as a sheet, no manual counting",
+"Owner: a weekly list of chalets empty for the next 7 days so phone sales can fill them",
+"Guest: automatic arrival message with check-in details and a map link the day before",
+"Guest: a post-stay thank-you message that asks for a Google review, only for clients rated 4-5",
+"Guest: a reminder to confirm arrival 48 hours before, with a no-answer flag for the owner",
+"Cleaner: a daily turnover list (chalets checking out then in the same day) sent to the cleaning team",
+"Cleaner: a \"cleaned and ready\" reply button that flips a chalet to ready in a shared sheet",
+"Maintenance: a form where staff report a broken heater by chalet, blocking that chalet in the plan",
+"Accountant: a month-end export of bookings (nights, chalet, source) as CSV by email",
+"Accountant: nights-sold totals per season for tax and tourist-levy reports",
+"Booking.com/Airbnb: n8n reads their iCal feeds to cover the gap the brief accepts (conflicts with non-phone bookings)",
+"Website owner: n8n watches the website booking feed and cross-checks it against phone bookings",
+"Bot developer: a failure watcher that messages the dev when the Le Register service stops answering"];
+var rg={},order=[];
+roles.forEach(function(r){var p=split(r,": ");if(!rg[p[0]]){rg[p[0]]=[];order.push(p[0])}rg[p[0]].push(p[1])});
+order.forEach(function(k){
+  var c=E("div","card role","<span class='win'></span><h3>"+esc(k)+"</h3>");
+  rg[k].forEach(function(t,i){var p=E("p","",nm()+esc(cap(t)));p.style.marginTop=i?"9px":"0";c.appendChild(p)});
+  $("roleGrid").appendChild(c)});
+
+/* 2 Constraints */
+var zones=[
+ ["real","Real constraints","granite: plan around it",[
+  "free. n8n self-hosted is free, Telegram Bot API is free, Groq has a free tier, so everything here can stay at zero cost",
+  "WhatsApp is not free; the Telegram choice already dissolved it, so guest messages need another free route (email, SMS gateway, or a Telegram link)",
+  "n8n sleeps when the PC sleeps; a scheduled 08:00 job fails if the machine is off, so run n8n on an always-on mini PC or Raspberry Pi",
+  "local-only means no webhooks from Booking.com; polling iCal on a schedule avoids the need"]],
+ ["imag","Imagined constraints","mist: walk through it",[
+  "n8n must read the bot's database; it can read a CSV the bot exports on a schedule instead"]],
+ ["trail","Turned into assets and routes","trails: around, through, or dissolved",[
+  "Turn constraint into asset|127.0.0.1-only n8n means no attack surface for the bot's private data",
+  "Route around polling conflict|second Telegram bot for staff and guests, separate from the owner bot",
+  "Route around no-inbound-port|n8n pulls from Le Register, Le Register never opens a port",
+  "Dissolve \"owner only\"|a staff bot with narrow commands (cleaned, broken, arrived) never touches booking data",
+  "Asset|n8n's execution log is a free audit trail for every automated message sent"]]];
+zones.forEach(function(z){
+  var d=E("div","zone "+z[0],"<h3>"+z[1]+"</h3><small>"+z[2]+"</small>");
+  z[3].forEach(function(t){
+    var h;
+    if(t.indexOf("|")>0){var p=t.split("|");h="<i>"+esc(p[0])+"</i>"+nm()+esc(cap(p[1]))}
+    else h=nm()+esc(cap(t));
+    d.appendChild(E("div","stone",h))});
+  $("cmap").appendChild(d)});
+
+/* 3 Cross-Pollination */
+var cross=[
+"Hotels: a pre-arrival upsell message (late checkout, firewood, ski pass) with a reply link",
+"Airlines: overbooking-style risk score per weekend, so peak weekends get extra checks",
+"ER triage: a color status per chalet today (arriving, in-stay, leaving, empty, needs cleaning)",
+"Restaurants: a \"table turn\" board view for chalets, one glance per morning",
+"Beekeeping: a seasonal calendar with pre-season checklist per chalet (gas, wood, linen)",
+"Casinos: unusual-pattern alerts, e.g. the same phone number booking two chalets on the same dates",
+"Ride share: a rating-based priority list for who to call back first when a chalet frees up",
+"Logistics: a delivery slot planner for linen and firewood from checkout times",
+"Airlines: waitlist; if a booking cancels, n8n messages clients who asked about those dates",
+"Event ticketing: a public read-only availability page per chalet for phone callers to quote from"];
+cross.forEach(function(t,i){var p=split(t,": ");
+  var c=E("div","post","<div class='from'>Postcard from</div><h3>"+esc(p[0])+"</h3><p>"+nm()+esc(cap(p[1]))+"</p>");
+  c.style.setProperty("--r",((i%3)-1)*0.6+"deg");$("postGrid").appendChild(c)});
+
+/* 4 Reverse */
+var rev=[
+"How to break trust: a guest gets a wrong arrival message; guard with a human-approve step before any guest-facing send",
+"How to break trust: an overlap that nobody sees; n8n sends a second, independent overlap check against the journal as a safety net",
+"How to fail quietly: the 08:00 summary never arrives; a dead-man's-switch workflow alerts when no summary went out by 08:15",
+"How to lose data: the SQLite file or n8n volume is lost; a nightly backup workflow copies both to cloud storage",
+"How to leak data: phone numbers leak in logs; n8n masks phone numbers in everything it writes",
+"How to annoy guests: message spam; a rate cap of one automated message per guest per day",
+"How to double-send: n8n retries cause duplicate messages; use an idempotency key per booking and message type",
+"How to ruin rating: one rude tap lowers a good client; n8n requires a note or a second tap on ratings below 2",
+"How to lose the owner: too many pings; a quiet-hours rule and one digest per day instead of many alerts"];
+rev.forEach(function(t){var a=split(t,": "),b=split(a[1],"; ");
+  var c=E("div","flip","<h3>"+esc(a[0])+"</h3><div class='bad'><b>The wreck</b>"+nm()+esc(cap(b[0]))+"</div><div class='good'><b>The guard</b>"+esc(cap(b[1]))+"</div>");
+  $("revGrid").appendChild(c)});
+
+/* 5 Failure */
+var fail=[
+"Deferred gap: an outbox row that always fails retries forever; an n8n workflow lists stuck outbox rows daily and alerts the owner",
+"Deferred gap: a record_command crash loses the command; an n8n health check reads the journal for gaps in numbering",
+"Deferred gap: Confirm/Cancel after expiry reads as recorded; n8n sends a \"proposal expired, nothing was recorded\" follow-up",
+"Deferred gap: long names exceed Telegram's 4096-char limit; a pre-send length guard in n8n splits messages",
+"Failure pattern: errors reach the owner only if the bot is up; n8n watches the bot from outside and messages via a separate bot",
+"Failure pattern: free-text model outage; n8n runs a tiny fallback parser on a webhook for the same text",
+"Failure pattern: model hallucinates a date; n8n cross-checks the proposed dates against a calendar sanity rule (past dates, over-60 nights) before confirm",
+"Lesson from five double bookings a season: a morning \"risky pairs\" report listing bookings that end and start on the same day in the same chalet"];
+fail.forEach(function(t){
+  if(t.indexOf("Lesson")===0){var p=split(t,": ");
+    $("failGrid").appendChild(E("div","lesson","<span class='tag les'>Lesson</span><br>"+nm()+"<b>"+esc(p[0].replace("Lesson ","From the lesson "))+"</b>: "+esc(p[1])));return}
+  var a=split(t,": "),b=split(a[1],"; "),g=a[0]==="Deferred gap";
+  var d=E("div","pair","<div class='f'><span class='tag "+(g?"gap":"pat")+"'>"+esc(a[0])+"</span><br>"+nm()+esc(cap(b[0]))+"</div><div class='arr'></div><div class='x'><span class='tag'>n8n patch</span><br>"+esc(cap(b[1]))+"</div>");
+  $("failGrid").appendChild(d)});
+
+/* 6 Morphological grid */
+var trig=["schedule","Telegram message","HTTP webhook","file change","form submit","beyond the axes"];
+var act=["message","sheet row","calendar event","email","Trello card","beyond the axes"];
+var combos=[ /* trigger idx, action idx, text */
+[3,4,"file change on bookings export + Trello card = the Epic 5 Trello register without writing Trello code in the bot"],
+[0,2,"schedule + Google Calendar = one calendar per chalet, auto-updated from the journal"],
+[4,1,"form submit + sheet row = guest pre-arrival form (arrival time, headcount, ID) feeding a per-stay sheet"],
+[0,3,"schedule + email = weekly owner digest, only when something changed"],
+[2,0,"webhook + Telegram message = any other app can ping the owner through the bot"],
+[3,5,"file change + Home Assistant = heat a chalet 2 hours before check-in"],
+[0,5,"schedule + weather API = snow or storm alert for tomorrow's arrivals"],
+[0,1,"schedule + sheet = revenue forecast from booked nights times a rate table"],
+[1,1,"Telegram staff bot + sheet = cleaner checklist with photo proof stored by stay"],
+[5,0,"iCal feed + overlap check = unified overlap alert across Booking.com, Airbnb and phone bookings"],
+[0,5,"schedule + LLM node = a weekly plain-language summary of ratings trends per client"]];
+var tb=$("morphTbl"),h="<tr><th></th>"+act.map(function(a){return "<th>"+a+"</th>"}).join("")+"</tr>";
+tb.innerHTML=h;
+trig.forEach(function(tr,ti){var row=E("tr","","<th class='rowh'>"+tr+"</th>");
+  act.forEach(function(a,ai){var td=E("td");
+    combos.forEach(function(c){if(c[0]===ti&&c[1]===ai){var t=c[2].replace(/^(\S)/,function(m){return m.toUpperCase()});td.appendChild(E("div","c",nm()+esc(t)))}});
+    row.appendChild(td)});
+  tb.appendChild(row)});
+/* axis-defining idea counted */
+(function(){var a=E("div","card","<b>The axes themselves</b><p>"+nm()+"Axis trigger: schedule, Telegram message, HTTP webhook, file change, form submit. Axis action: message, sheet row, calendar event, email, Trello card</p>");a.style.marginBottom="14px";var ms=document.querySelector(".mscroll");ms.parentNode.insertBefore(a,ms)})();
+
+/* 7 Build */
+var works=[
+"the morning summary idea; extend it into a morning dashboard with arrivals, departures, cleanings and open alerts in one message",
+"free text with Confirm/Cancel; extend with the same confirm pattern for every n8n-initiated change",
+"the append-only journal; n8n subscribes to it as an event stream and drives every other feature from it",
+"owner-only access; keep n8n staff features on a separate bot so the owner bot stays narrow",
+"tiny, free MVP; start n8n with exactly one workflow and grow only when it earns its keep"];
+works.forEach(function(t){var p=split(t,"; ");
+  $("ringGrid").appendChild(E("div","ring","<div class='w'><b>Already works</b>"+nm()+esc(cap(p[0]))+"</div><div class='e'><b>The next ring</b>"+esc(cap(p[1]))+"</div>"))});
+["one nightly n8n workflow that emails the owner the SQLite backup is the cheapest feature with the highest safety value",
+"a \"what changed since yesterday\" diff report built from the journal",
+"an AI weekly review that reads the journal and suggests where phone bookings cluster, answering the phase-2 prediction question for free",
+"n8n as the home for Epic 4 (Morning Summary) and Epic 5 (Trello) so the bot stays small",
+"a read-only \"phone bookings only\" public availability link the owner reads out to callers",
+"n8n as a test bench that replays journal commands against a staging bot after each release"].forEach(function(t){
+  $("wildGrid").appendChild(E("div","spark",nm()+esc(cap(t))))});
+
+/* 8 What if */
+["What if the bot never existed: n8n plus a Telegram form would still capture bookings, so n8n is the fallback if the bot is down",
+"What if bookings were free to change: n8n offers one-tap reschedule links to guests, subject to owner approval",
+"What if guests could self-serve phone bookings: a Telegram guest bot proposes dates, the owner approves in the owner bot",
+"What if the owner had 400 chalets: queue-based n8n workflows, a Postgres journal copy, per-chalet staff channels",
+"What if there were no phone calls: voicemail transcription turns missed calls into proposed New commands",
+"What if the owner is on holiday: a delegate mode that forwards alerts to a backup person for a set period",
+"What if a client is rated 1: n8n requires a deposit link before confirming their next booking",
+"What if every chalet had a lock code: n8n generates a per-stay code and sends it on arrival day",
+"What if the season ends: n8n archives the season journal to a dated file and starts a clean report",
+"What if the bot was a voice note: speech-to-text node turns an owner voice message into a proposed New command",
+"What if payments mattered: a deposit-received tracker as a sheet column set by a Confirm tap",
+"What if the owner wants to ask questions: a read-only ask the register command that answers who is in chalet 7 on the 14th"].forEach(function(t){
+  var p=split(t,": ");$("ifGrid").appendChild(E("div","if","<h3>"+esc(p[0])+"?</h3><p>"+nm()+esc(cap(p[1]))+"</p>"))});
+
+/* 9 Time */
+var past=[
+"1900s artisan: a printable daily sheet (PDF) of arrivals and cleanings the owner can pin on the wall",
+"1900s artisan: a guest book export, one page per stay with notes and rating",
+"1900s artisan: a hand-written style summary the owner can read aloud on a call"];
+var now=[
+"Safety net: n8n monitors disk space and the SQLite file size on the host and warns before the database fails",
+"Compliance: a monthly guest register export for the local authority, if the resort requires it",
+"Onboarding: a Telegram tutorial bot that explains the commands using command-grammar.md",
+"Language: an auto-translation step so French and English guest messages go out in the guest's language",
+"Analytics: which weekdays and weeks phone bookings land on, shown as a heatmap sheet",
+"Cost: a monthly report of Groq tokens used by free-text parsing, to stay inside the free tier",
+"Reliability: n8n sends a canary command weekly from a test account to prove the bot still answers",
+"Reliability: after every upgrade of n8n or the bot, an n8n smoke test runs and reports pass or fail"];
+var fut=[
+"2150 colonist: predictive pricing that raises rates when neighbouring chalets fill up (phase 2 done by n8n plus a model)",
+"2150 colonist: auto-negotiating callbacks that text no-answer clients once and then drop them",
+"2150 colonist: the register as an event log other tools subscribe to by webhook",
+"2150 colonist: a digital twin calendar showing what-if moves before the owner confirms a change"];
+/* numbering follows memlog order for time shifting: past/future interleaved, so assign numbers by original order */
+var tOrder=["1900s artisan: a printable","1900s artisan: a guest","2150 colonist: predictive","2150 colonist: auto","2150 colonist: the register","1900s artisan: a hand","2150 colonist: a digital"];
+var tl=$("timeline");
+function evs(list,cls,eraTxt,eraCls,grouped){
+  var w=E("div","tl "+cls);w.appendChild(E("div","era "+eraCls,eraTxt));
+  var host=grouped?E("div","evs"):w;
+  list.forEach(function(t){var p=split(t,": ");host.appendChild(E("div","ev","<h3>"+esc(p[0])+"</h3>"+nm()+esc(cap(p[1]))))});
+  if(grouped)w.appendChild(host);tl.appendChild(w)}
+/* keep memlog numbering order exactly: build from original sequence */
+var seq=past.concat(fut).concat(now);
+/* simple approach: render in memlog order numbering by pre-assigning */
+(function(){
+  var memOrder=[past[0],past[1],fut[0],fut[1],fut[2],past[2],fut[3]].concat(now);
+  var base=N,idx={};memOrder.forEach(function(t,i){idx[t]=base+i+1});
+  var mk=function(t){var p=split(t,": "),n=idx[t];return E("div","ev","<h3>"+esc(p[0])+"</h3><span class='num'>#"+(n<10?"0"+n:n)+"</span>"+esc(cap(p[1])))};
+  var a=E("div","tl past");a.appendChild(E("div","era","1900s"));past.forEach(function(t){a.appendChild(mk(t))});tl.appendChild(a);
+  var b=E("div","tl now");b.appendChild(E("div","era now","Today, on the ground"));var hs=E("div","evs");now.forEach(function(t){hs.appendChild(mk(t))});b.appendChild(hs);tl.appendChild(b);
+  var c=E("div","tl fut");c.appendChild(E("div","era fut","2150"));fut.forEach(function(t){c.appendChild(mk(t))});tl.appendChild(c);
+  N=base+memOrder.length})();
+
+/* Insights */
+[["Insight 1","Safety-net bundle is the cheapest high-value start: nightly backup of the SQLite file, a dead-man's switch for the 08:00 summary, and a weekly canary command. Needs no change to the bot's logic, and many ideas (failure watcher, stuck outbox alert, disk space) are the same family"],
+["Insight 2","The brief accepts a gap: conflicts between phone bookings and Booking.com/Airbnb/website bookings. n8n can close it by reading their iCal feeds and running one unified overlap check"],
+["Insight 3","Many ideas (daily ops board, cleaner list, arrivals digest, Trello register, calendar per chalet, month-end export) are one idea wearing different hats: a read-only booking export that n8n turns into outputs. Epics 4 and 5 could move into n8n and keep the bot small"],
+["Insight 4","Two constraints shape everything: only one consumer may poll the bot token (use a second bot for staff/guests), and n8n cannot read the bot's SQLite directly. Unlock: the bot writes a booking export (CSV or JSON) into a folder n8n mounts, or exposes a small read-only endpoint"]].forEach(function(i){
+  $("insights").appendChild(E("div","ins","<div class='k'>"+i[0]+"</div><p>"+esc(i[1])+"</p>"))});
+
+$("cnt").textContent=N;
+
+/* village in hero */
+var v=$("village"),s="";
+for(var i=0;i<40;i++){var x=14+i*24.4,y=170-((i*37)%5)*3-(i%2?4:0),w=14+(i%3)*2;
+ s+='<g><rect x="'+x+'" y="'+y+'" width="'+w+'" height="11" fill="var(--roof)"/><polygon points="'+(x-2)+','+y+' '+(x+w/2)+','+(y-8)+' '+(x+w+2)+','+y+'" fill="var(--snow)"/>'+(i%3?'<rect x="'+(x+w/2-2)+'" y="'+(y+3)+'" width="4" height="4" fill="var(--gold)"/>':'')+'</g>'}
+v.innerHTML=s;
+
+/* snow */
+var cv=$("snow"),cx=cv.getContext&&cv.getContext("2d");
+if(cx&&!(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches)){
+  var W,H,fl=[];
+  var rs=function(){W=cv.width=innerWidth;H=cv.height=innerHeight};rs();addEventListener("resize",rs);
+  for(var i=0;i<70;i++)fl.push({x:Math.random()*W,y:Math.random()*H,r:1+Math.random()*2.2,v:.3+Math.random()*.8,p:Math.random()*6});
+  var dark=matchMedia("(prefers-color-scheme: dark)");
+  (function f(){cx.clearRect(0,0,W,H);cx.fillStyle=dark.matches?"rgba(230,236,255,.8)":"rgba(120,150,200,.55)";
+    fl.forEach(function(o){o.y+=o.v;o.p+=.01;o.x+=Math.sin(o.p)*.4;if(o.y>H){o.y=-5;o.x=Math.random()*W}
+      cx.beginPath();cx.arc(o.x,o.y,o.r,0,6.3);cx.fill()});requestAnimationFrame(f)})();
+}
+})();
+</script>
+</body>
+</html>

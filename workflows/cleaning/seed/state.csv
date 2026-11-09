@@ -1,0 +1,10 @@
+key,value
+telegram_offset,0
+poll_lock_until,
+chalet_count,40
+quiet_start,22:00
+quiet_end,07:00
+urgent_repeat_minutes,60
+urgent_max_repeats,3
+pending_task_minutes,120
+digest_time,08:00
